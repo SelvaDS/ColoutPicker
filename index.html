@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Spin Wheel</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            position: relative;
+            padding: 20px;
+        }
+
+        /* The Wheel Wrapper */
+        .wheel-wrapper {
+            position: relative;
+            width: 800px;
+            height: 800px;
+            margin-bottom: 30px;
+            filter: drop-shadow(var(--shadow));
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* The Fixed Pointer */
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 50px;
+            background: #ef4444;
+            clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+            z-index: 10;
+            border-radius: 4px;
+        }
+
+        /* Controls */
+        #spin-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3);
+        }
+
+        #spin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        #spin-btn:active {
+            transform: translateY(1px);
+        }
+
+        #spin-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        /* Result Display */
+        #result {
+            margin-top: 25px;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1e293b;
+            min-height: 2.5rem;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #result.show {
+            opacity: 1;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 500px) {
+            .wheel-wrapper { width: 320px; height: 320px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="wheel-wrapper">
+            <div class="pointer"></div>
+            <canvas id="wheelCanvas" width="800" height="800"></canvas>
+        </div>
+
+        <button id="spin-btn">SPIN WHEEL</button>
+        <div id="result">Winner Name!</div>
+    </div>
+
+    <script>
+        const names = [
+            "Arunraj Palanivel", 
+            "Avani", 
+            "Elan Cinemo", 
+            "Gayathri Devi", 
+            "Jinith", 
+            "Kavin", 
+            "Madhankumar", 
+            "Madhulika", 
+            "Pauljoseph", 
+            "Robin", 
+            "Sakthivel", 
+            "Sam Jacob", 
+            "Satheesh Elumalai", 
+            "Selvaraj", 
+            "Sivasankar", 
+            "Sri Hari Sankar", 
+            "Tharun", 
+            "Thenmozhi"
+        ];
+
+        const colors = [
+            "#f87171", 
+            "#fb923c", 
+            "#fbbf24", 
+            "#facc15", 
+            "#a3e635", 
+            "#4ade80",
+            "#34d399", 
+            "#2dd4bf", 
+            "#22d3ee", 
+            "#38bdf8", 
+            "#60a5fa", 
+            "#818cf8",
+            "#a78bfa", 
+            "#c084fc", 
+            "#e879f9", 
+            "#f472b6", 
+            "#fb7185", 
+            "#94a3b8"
+        ];
+
+        const canvas = document.getElementById("wheelCanvas");
+        const ctx = canvas.getContext("2d");
+        const spinBtn = document.getElementById("spin-btn");
+        const resultDisplay = document.getElementById("result");
+
+        let currentRotation = 0;
+        let isSpinning = false;
+        const totalSegments = names.length;
+        const arc = (2 * Math.PI) / totalSegments;
+
+        function drawWheel() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2 - 10;
+
+            for (let i = 0; i < totalSegments; i++) {
+                const angle = currentRotation + i * arc;
+                
+                // Draw Segment
+                ctx.beginPath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, angle, angle + arc);
+                ctx.lineTo(centerX, centerY);
+                ctx.fill();
+                ctx.strokeStyle = "rgba(255,255,255,0.2)";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw Text
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle + arc / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "white";
+                ctx.font = "bold 24px sans-serif";
+                ctx.fillText(names[i], radius - 30, 10);
+                ctx.restore();
+            }
+
+            // Draw center hub
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 30, 0, 2 * Math.PI);
+            ctx.fillStyle = "white";
+            ctx.fill();
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "rgba(0,0,0,0.2)";
+        }
+
+        function spin() {
+            if (isSpinning) return;
+            
+            isSpinning = true;
+            resultDisplay.classList.remove('show');
+            spinBtn.disabled = true;
+
+            const extraSpins = 5 + Math.random() * 5; // 5 to 10 full rotations
+            const spinDuration = 4000; // 4 seconds
+            const startRotation = currentRotation;
+            const targetRotation = startRotation + (extraSpins * Math.PI * 2);
+            const startTime = performance.now();
+
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / spinDuration, 1);
+                
+                // Easing function: Cubic Out (realistic deceleration)
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                
+                currentRotation = startRotation + (targetRotation - startRotation) * easeOut;
+                drawWheel();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                    determineWinner();
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function determineWinner() {
+            // Adjust for the pointer at the top (-90 degrees)
+            const normalizedRotation = (currentRotation + Math.PI/2) % (Math.PI * 2);
+            const segmentAngle = Math.PI * 2 / totalSegments;
+            
+            // Calculate which index is under the pointer
+            let winningIndex = totalSegments - Math.floor(normalizedRotation / segmentAngle);
+            if (winningIndex === totalSegments) winningIndex = 0;
+            // Catch for edge cases
+            winningIndex = winningIndex-1 % totalSegments;
+
+            resultDisplay.textContent = `🎉 ${names[winningIndex]}! 🎉`;
+            resultDisplay.classList.add('show');
+        }
+
+        spinBtn.addEventListener('click', spin);
+        drawWheel(); // Initial draw
+    </script>
+</body>
+</html>
